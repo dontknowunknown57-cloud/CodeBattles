@@ -63,7 +63,7 @@ http://localhost:3000
 ```
 
 ✨ **Live Demo:**
-🌍 [CodeBattles.vercel.app](https://codebattles.vercel.app)
+🌍 [CodeBattles.vercel.app](https://codebattles-navy.vercel.app/)
 
 ---
 
