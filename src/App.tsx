@@ -7,6 +7,7 @@ import Challenges from './pages/Challenges';
 import Challenge from './pages/Challenge';
 import Leaderboard from './pages/Leaderboard';
 import About from './pages/About';
+import ColorShowcase from './components/ColorShowcase';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="/challenge/:id" element={<Challenge />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/about" element={<About />} />
+              <Route path="/colors" element={<ColorShowcase />} />
             </Routes>
           </main>
         </div>
