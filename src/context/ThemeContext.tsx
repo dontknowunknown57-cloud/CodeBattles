@@ -4,7 +4,6 @@ import { Theme } from '../types';
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
-  isTransitioning: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -18,34 +17,35 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark');
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('codebattles-theme') as Theme;
-    if (savedTheme) {
-      setTheme(savedTheme);
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Check system preference first
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('codebattles-theme') as Theme;
+      if (saved) return saved;
+      
+      // Default to system preference
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-  }, []);
+    return 'dark';
+  });
 
   useEffect(() => {
-    document.documentElement.className = theme;
+    // Apply theme to document
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    
+    // Save to localStorage
     localStorage.setItem('codebattles-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-      setTimeout(() => setIsTransitioning(false), 300);
-    }, 150);
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isTransitioning }}>
-      <div className={`transition-all duration-300 ${isTransitioning ? 'opacity-90' : 'opacity-100'}`}>
-        {children}
-      </div>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
     </ThemeContext.Provider>
   );
 };
