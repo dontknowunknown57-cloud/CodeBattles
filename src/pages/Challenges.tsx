@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, Heart, Trophy, Users, Clock } from 'lucide-react';
+import { Search, Filter, Heart, Trophy, Users, Clock, Code } from 'lucide-react';
 import { mockChallenges } from '../data/mockData';
 import { useProgress } from '../hooks/useProgress';
 import { Challenge } from '../types';
+import ApiKeySetup from '../components/ApiKeySetup';
 
 const Challenges: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +61,11 @@ const Challenges: React.FC = () => {
               ></div>
             </div>
           </div>
+        </div>
+
+        {/* API Setup Notice */}
+        <div className="mb-8">
+          <ApiKeySetup />
         </div>
 
         {/* Filters */}
@@ -189,7 +195,10 @@ const Challenges: React.FC = () => {
                         <span>Completed</span>
                       </>
                     ) : (
-                      <span>Start Challenge</span>
+                      <>
+                        <Code className="h-5 w-5" />
+                        <span>Start Challenge</span>
+                      </>
                     )}
                   </Link>
                 </div>

@@ -1,30 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Play, RotateCcw, Send, Clock, Trophy, Zap } from 'lucide-react';
-import { mockChallenges, mockCodeTemplates } from '../data/mockData';
+import { ArrowLeft, Clock, Trophy, Zap } from 'lucide-react';
+import { mockChallenges } from '../data/mockData';
+import { challengeTestCases, codeTemplates } from '../data/challengeTestCases';
 import { useProgress } from '../hooks/useProgress';
+import CodeEditor from '../components/CodeEditor';
+import { ExecutionResult } from '../services/codeExecutionService';
 
 const Challenge: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { progress, completeChallenge } = useProgress();
   
-  const [selectedLanguage, setSelectedLanguage] = useState<'python' | 'javascript' | 'cpp'>('python');
-  const [code, setCode] = useState('');
-  const [output, setOutput] = useState('');
-  const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
   const challenge = mockChallenges.find(c => c.id === id);
   const isCompleted = challenge && progress.completedChallenges.includes(challenge.id);
-
-  useEffect(() => {
-    if (challenge && mockCodeTemplates[selectedLanguage]) {
-      setCode(mockCodeTemplates[selectedLanguage]);
-    }
-  }, [selectedLanguage, challenge]);
+  const testCases = challenge ? challengeTestCases[challenge.id] || [] : [];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -53,38 +46,13 @@ const Challenge: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleRun = () => {
-    setIsRunning(true);
-    setOutput('Running your code...\n');
-    
-    setTimeout(() => {
-      const mockOutput = `>>> Running ${challenge.title}\n\n` +
-        `Test Case 1: ✅ Passed\n` +
-        `Input: ${challenge.examples[0].input}\n` +
-        `Expected: ${challenge.examples[0].output}\n` +
-        `Your Output: ${challenge.examples[0].output}\n\n` +
-        `All test cases passed! 🎉\n` +
-        `Execution time: 0.12ms\n` +
-        `Memory usage: 2.1 MB`;
-      
-      setOutput(mockOutput);
-      setIsRunning(false);
-    }, 2000);
-  };
-
-  const handleSubmit = () => {
+  const handleSubmissionSuccess = (result: ExecutionResult) => {
     if (!isCompleted) {
       completeChallenge(challenge.id, challenge.points);
-      setIsSubmitted(true);
       setShowCelebration(true);
       
       setTimeout(() => setShowCelebration(false), 3000);
     }
-  };
-
-  const handleReset = () => {
-    setCode(mockCodeTemplates[selectedLanguage]);
-    setOutput('');
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -206,82 +174,12 @@ const Challenge: React.FC = () => {
           </div>
 
           {/* Code Editor */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-            {/* Language Tabs */}
-            <div className="flex border-b border-gray-200 dark:border-gray-700">
-              {['python', 'javascript', 'cpp'].map(lang => (
-                <button
-                  key={lang}
-                  onClick={() => setSelectedLanguage(lang as any)}
-                  className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors duration-200 ${
-                    selectedLanguage === lang
-                      ? 'border-purple-500 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                >
-                  {lang === 'cpp' ? 'C++' : lang.charAt(0).toUpperCase() + lang.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            {/* Code Area */}
-            <div className="flex-1 flex flex-col">
-              <div className="flex-1 p-4">
-                <textarea
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full h-64 font-mono text-sm bg-gray-900 text-green-400 p-4 rounded-lg border-none resize-none focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  placeholder="// Start coding here..."
-                  spellCheck={false}
-                />
-              </div>
-
-              {/* Console Output */}
-              <div className="border-t border-gray-200 dark:border-gray-700">
-                <div className="bg-gray-50 dark:bg-gray-900 px-4 py-2">
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Console Output</span>
-                </div>
-                <div className="p-4 bg-gray-900 text-green-400 font-mono text-sm h-32 overflow-y-auto">
-                  {output || 'Click "Run Code" to see output...'}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleRun}
-                    disabled={isRunning}
-                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-500 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                  >
-                    <Play className="h-4 w-4" />
-                    <span>{isRunning ? 'Running...' : 'Run Code'}</span>
-                  </button>
-                  
-                  <button
-                    onClick={handleReset}
-                    className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    <span>Reset</span>
-                  </button>
-                </div>
-
-                <button
-                  onClick={handleSubmit}
-                  disabled={isCompleted}
-                  className={`flex items-center space-x-2 font-medium py-2 px-6 rounded-lg transition-colors duration-200 ${
-                    isCompleted
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'bg-purple-600 hover:bg-purple-500 text-white'
-                  }`}
-                >
-                  <Send className="h-4 w-4" />
-                  <span>{isCompleted ? 'Completed' : 'Submit Solution'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          <CodeEditor
+            challengeId={challenge.id}
+            testCases={testCases}
+            onSubmissionSuccess={handleSubmissionSuccess}
+            initialCode={codeTemplates.python[challenge.id] || '# Write your solution here\n'}
+          />
         </div>
       </div>
     </div>
